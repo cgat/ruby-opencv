@@ -484,6 +484,35 @@ class TestCvMat_imageprocessing < OpenCVTestCase
     end
   end
 
+def test_get_affine_transform
+    from = [
+        OpenCV::CvPoint2D32f.new(540, 382),
+        OpenCV::CvPoint2D32f.new(802, 400),
+        OpenCV::CvPoint2D32f.new(850, 731)
+    ]
+    to = [
+      OpenCV::CvPoint2D32f.new(0, 0),
+      OpenCV::CvPoint2D32f.new(233, 0),
+      OpenCV::CvPoint2D32f.new(233, 310)
+    ]
+    transform = OpenCV::CvMat.get_affine_transform(from, to)
+    assert_equal 2, transform.rows
+    assert_equal 3, transform.columns
+    expected = [
+      1.062,
+      -0.154,
+      -557.149,
+      -0.077,
+      0.948,
+      -317.454
+    ]
+    2.times do |i|
+      3.times do |j|
+        assert_in_delta(expected.shift, transform[i][j], 0.001)
+      end
+    end
+  end
+
   def test_rotation_matrix2D
     mat1 = CvMat.rotation_matrix2D(CvPoint2D32f.new(10, 20), 60, 2.0)
     expected = [1.0, 1.73205, -34.64102,
