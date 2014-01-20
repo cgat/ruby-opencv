@@ -486,30 +486,29 @@ class TestCvMat_imageprocessing < OpenCVTestCase
 
 def test_get_affine_transform
     from = [
-        OpenCV::CvPoint2D32f.new(540, 382),
-        OpenCV::CvPoint2D32f.new(802, 400),
-        OpenCV::CvPoint2D32f.new(850, 731)
+        OpenCV::CvPoint2D32f.new(144.0, 66.85714285714286),
+        OpenCV::CvPoint2D32f.new(730.2857142857143, 155.57142857142858),
+        OpenCV::CvPoint2D32f.new(722.5714285714287, 42.42857142857143)
     ]
+    [[], [], []]
     to = [
-      OpenCV::CvPoint2D32f.new(0, 0),
-      OpenCV::CvPoint2D32f.new(233, 0),
-      OpenCV::CvPoint2D32f.new(233, 310)
+      OpenCV::CvPoint2D32f.new(290.88, 178.56),
+      OpenCV::CvPoint2D32f.new(601.92, 235.44),
+      OpenCV::CvPoint2D32f.new(597.6, 172.07999999999998)
     ]
     transform = OpenCV::CvMat.get_affine_transform(from, to)
     assert_equal 2, transform.rows
     assert_equal 3, transform.columns
     expected = [
-      1.062,
-      -0.154,
-      -557.149,
-      -0.077,
-      0.948,
-      -317.454
+      0.5302190184593201,
+      0.002030544448643923,
+      214.3927001953125,
+      0.012408728711307049,
+      0.5591539740562439,
+      139.38970947265625
     ]
-    2.times do |i|
-      3.times do |j|
-        assert_in_delta(expected.shift, transform[i][j], 0.001)
-      end
+    6.times do |i|
+      assert_in_delta(expected.shift, transform[i][0], 0.001)
     end
   end
 
@@ -546,15 +545,15 @@ def test_get_affine_transform
     # (0, 255)    =>  (0, 275)
     map_matrix = CvMat.new(3, 3, :cv32f, 1)
     map_matrix[0] = CvScalar.new(0.72430)
-    map_matrix[1] = CvScalar.new(-0.19608) 
-    map_matrix[2] = CvScalar.new(50.00000) 
-    map_matrix[3] = CvScalar.new(0.0) 
+    map_matrix[1] = CvScalar.new(-0.19608)
+    map_matrix[2] = CvScalar.new(50.00000)
+    map_matrix[3] = CvScalar.new(0.0)
     map_matrix[4] = CvScalar.new(0.62489)
     map_matrix[5] = CvScalar.new(0.0)
     map_matrix[6] = CvScalar.new(0.00057)
     map_matrix[7] = CvScalar.new(-0.00165)
     map_matrix[8] = CvScalar.new(1.00000)
-    
+
     mat1 = mat0.warp_perspective(map_matrix)
     mat2 = mat0.warp_perspective(map_matrix, CV_INTER_NN)
     mat3 = mat0.warp_perspective(map_matrix, CV_INTER_LINEAR | CV_WARP_INVERSE_MAP)
@@ -681,7 +680,7 @@ def test_get_affine_transform
     mat6 = mat1.erode(IplConvKernel.new(5, 5, 2, 2, :cross))
     mat7 = mat0.clone
     mat7.erode!
-    
+
     assert_equal('075eb0e281328f768eb862735d16979d', hash_img(mat3))
     assert_equal('075eb0e281328f768eb862735d16979d', hash_img(mat4))
     assert_equal('9f02fc4438b1d69fea75a10dfd2b66b0', hash_img(mat5))
@@ -780,7 +779,7 @@ def test_get_affine_transform
       }
     }
   end
-  
+
   def test_smooth
     mat0 = CvMat.load(FILENAME_LENA32x32, CV_LOAD_IMAGE_GRAYSCALE)
 
@@ -882,7 +881,7 @@ def test_get_affine_transform
     assert_raise(TypeError) {
       mat0.smooth(CV_GAUSSIAN, 3, 0, 0, DUMMY_OBJ)
     }
-    
+
     # Median
     mat0 = create_cvmat(64, 64, :cv8u, 1) { |j, i, c|
       if (i + j) % 15 != 0
@@ -937,7 +936,7 @@ def test_get_affine_transform
   def test_filter2d
     mat0 = CvMat.load(FILENAME_LENA256x256, CV_LOAD_IMAGE_GRAYSCALE)
     kernel = CvMat.new(3, 3, :cv32f, 1)
-    
+
     # Laplacian filter kernel
     laplace4 = [0, 1, 0,
                 1, -4, 1,
@@ -972,7 +971,7 @@ def test_get_affine_transform
       mat2 = mat0.copy_make_border(type, CvSize.new(300, 300), CvPoint.new(30, 30))
       assert_equal('96940dc9e3abb6e2556ea51af1468031', hash_img(mat2))
     }
-    
+
     assert_raise(TypeError) {
       mat0.copy_make_border(DUMMY_OBJ, CvSize.new(64, 48), CvPoint.new(16, 8))
     }
@@ -1026,7 +1025,7 @@ def test_get_affine_transform
     assert(result5.all? {|a| a.class == CvMat})
     result_sum << result5[0]
     result_tiled_sum << result5[1]
-    
+
     (result_sum + result_sqsum + result_tiled_sum).each { |s|
       assert_equal(mat0.height + 1, s.height)
       assert_equal(mat0.width + 1, s.width)
@@ -1043,7 +1042,7 @@ def test_get_affine_transform
         assert_in_delta(x, sum[i][0], 0.001)
       }
     }
-    
+
     expected_sqsum = [0, 0, 0, 0,
                       0, 0, 1, 5,
                       0, 9, 26, 55,
@@ -1165,7 +1164,7 @@ def test_get_affine_transform
 
   def test_adaptive_threshold
     mat0 = create_cvmat(5, 5, :cv8u, 1) { |j, i, c| (c + 1) * 10 }
-    
+
     mat1 = mat0.adaptive_threshold(128)
     expected1 = [0, 0, 0, 0, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]
     expected1.each_with_index { |expected, i|
@@ -1364,7 +1363,7 @@ def test_get_affine_transform
       assert_nil(contours.h_next.h_next.v_next)
       assert_nil(contours.h_next.h_next.h_next.v_next)
     }
-    
+
     contours = mat0.find_contours(:mode => CV_RETR_TREE)
     assert_not_nil(contours)
     assert_equal(4, contours.total)
@@ -1761,7 +1760,7 @@ def test_get_affine_transform
       assert_in_delta(expected_pt.x, pt.x, 20)
       assert_in_delta(expected_pt.y, pt.y, 20)
     }
-    
+
     # ccoeff_normed
     [CV_TM_CCOEFF_NORMED, :ccoeff_normed].each { |method|
       result = mat.match_template(templ, method)
@@ -1805,7 +1804,7 @@ def test_get_affine_transform
       assert_in_delta(0.0033327, mat_cv.match_shapes(mat_ov, method), 0.00001)
     }
   end
-  
+
   def test_mean_shift
     flunk('FIXME: CvMat#mean_shift is not tested yet.')
   end
@@ -1830,7 +1829,7 @@ def test_get_affine_transform
     arr_gamma = [gamma] * num_points
     size = CvSize.new(3, 3)
     term_criteria = CvTermCriteria.new(100, num_points / 2)
-    
+
     # initialize contours
     points = []
     num_points.times { |i|
@@ -1951,7 +1950,7 @@ def test_get_affine_transform
     velx, vely = curr.optical_flow_hs(prev, prev_velx, prev_vely, :criteria => CvTermCriteria.new(10, 0.01))
     assert_in_delta(150, count_threshold(velx, 1), 20)
     assert_in_delta(130, count_threshold(vely, 1), 20)
-    
+
     assert_raise(TypeError) {
       curr.optical_flow_hs(DUMMY_OBJ)
     }
@@ -1985,7 +1984,7 @@ def test_get_affine_transform
         CvColor::White
       end
     }
-    
+
     velx, vely = curr.optical_flow_lk(prev, CvSize.new(3, 3))
     assert_in_delta(100, count_threshold(velx, 1), 20)
     assert_in_delta(90, count_threshold(vely, 1), 20)
@@ -2040,7 +2039,7 @@ def test_get_affine_transform
     velx, vely = curr.optical_flow_bm(prev, nil, nil, :max_range => CvSize.new(5, 5))
     assert_in_delta(400, count_threshold(velx, 1), 30)
     assert_in_delta(300, count_threshold(vely, 1), 30)
-    
+
     prev_velx, prev_vely = curr.optical_flow_bm(prev)
     velx, vely = curr.optical_flow_bm(prev, prev_velx, prev_vely)
     assert_in_delta(350, count_threshold(velx, 1), 30)
@@ -2074,7 +2073,7 @@ def test_get_affine_transform
     assert_equal(254, descriptors1.size)
     assert_equal(Array, descriptors1[0].class)
     assert_equal(128, descriptors1[0].size)
-    
+
     # use mask
     mask = create_cvmat(mat0.rows, mat0.cols, :cv8u, 1) { |j, i|
       if i < mat0.cols / 2
